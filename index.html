@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>화성특례시 클린맵 | 청렴 공개 행정 플랫폼</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  width:100vw;height:100vh;overflow:hidden;
+  font-family:'Pretendard','Malgun Gothic',sans-serif;
+  background:#EFF3FB;color:#1e293b;
+  font-size:clamp(15px,1.5vw,22px);
+}
+.app{display:grid;grid-template-rows:9vh 83vh 8vh;width:100vw;height:100vh;overflow:hidden;}
+
+/* 헤더 */
+.header{
+  background:linear-gradient(135deg,#1A3A6B,#2563EB);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2%;z-index:200;box-shadow:0 3px 18px rgba(37,99,235,0.25);
+}
+.h-left{display:flex;align-items:center;gap:1vw;}
+.h-title .main{font-size:clamp(16px,1.5vw,24px);font-weight:800;color:#fff;display:block;}
+.h-title .sub{font-size:clamp(11px,0.9vw,15px);color:rgba(255,255,255,0.72);display:block;}
+.h-nav{display:flex;gap:0.8vw;}
+.nav-btn{
+  font-size:clamp(12px,1.1vw,18px);font-weight:700;padding:0.7vh 1.4vw;border-radius:8px;
+  border:2px solid rgba(255,255,255,0.4);background:transparent;color:rgba(255,255,255,0.9);
+  cursor:pointer;transition:all 0.18s;font-family:inherit;
+}
+.nav-btn:hover,.nav-btn.active{background:rgba(255,255,255,0.22);border-color:rgba(255,255,255,0.75);color:#fff;}
+.h-right{display:flex;align-items:center;gap:1.2vw;}
+.datetime{color:rgba(255,255,255,0.9);font-size:clamp(11px,0.95vw,16px);text-align:right;line-height:1.7;}
+.datetime strong{font-size:clamp(13px,1.2vw,19px);display:block;}
+.user-badge{
+  background:rgba(255,255,255,0.18);border:2px solid rgba(255,255,255,0.42);color:#fff;
+  border-radius:22px;padding:0.4vh 1.3vw;font-size:clamp(12px,1vw,16px);font-weight:700;
+}
+
+/* 콘텐츠 */
+.content{display:grid;grid-template-columns:22% 56% 22%;height:83vh;overflow:hidden;}
+.panel{display:flex;flex-direction:column;gap:0.9vh;padding:1.1vh 0.9vw;overflow:hidden;background:#EFF3FB;}
+.panel-left{border-right:1px solid #d4ddf5;}
+.panel-right{border-left:1px solid #d4ddf5;}
+.card{
+  background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(30,41,59,0.09);
+  padding:1.1vh 1.1vw;overflow:hidden;flex-shrink:0;
+}
+.card-title{
+  font-size:clamp(13px,1.1vw,18px);font-weight:800;color:#1A3A6B;
+  margin-bottom:0.6vh;display:flex;align-items:center;gap:0.4vw;
+}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.6vh;}
+.kpi-card{background:#F4F7FF;border-radius:10px;padding:1vh 0.6vw;text-align:center;border-top:4px solid #2563EB;overflow:hidden;}
+.kpi-card.orange{border-top-color:#F59E0B;}.kpi-card.green{border-top-color:#10B981;}
+.kpi-card.red{border-top-color:#EF4444;}.kpi-card.purple{border-top-color:#8B5CF6;}
+.kpi-card.cyan{border-top-color:#06B6D4;}
+.kpi-num{font-size:clamp(20px,2.2vw,34px);font-weight:900;color:#1A3A6B;line-height:1.1;}
+.kpi-card.orange .kpi-num{color:#F59E0B;}.kpi-card.green .kpi-num{color:#10B981;}
+.kpi-card.red .kpi-num{color:#EF4444;}.kpi-card.purple .kpi-num{color:#8B5CF6;}
+.kpi-card.cyan .kpi-num{color:#06B6D4;}
+.kpi-label{font-size:clamp(10px,0.85vw,14px);color:#64748b;margin-top:0.2vh;font-weight:700;}
+.kpi-diff{font-size:clamp(10px,0.8vw,13px);color:#10B981;font-weight:700;}
+.kpi-diff.down{color:#EF4444;}
+
+/* 필터 */
+.filter-wrap{display:flex;flex-wrap:wrap;gap:0.5vw;}
+.filter-btn{
+  font-size:clamp(11px,0.95vw,16px);font-weight:700;padding:0.45vh 0.8vw;border-radius:22px;
+  border:2px solid #c7d2f0;background:#fff;color:#475569;cursor:pointer;transition:all 0.18s;font-family:inherit;
+}
+.filter-btn:hover,.filter-btn.active{background:#2563EB;border-color:#2563EB;color:#fff;}
+
+/* 중앙 패널 */
+.panel-center{display:flex;flex-direction:column;padding:1.1vh 0.9vw;gap:0.9vh;overflow:hidden;background:#F4F7FF;}
+.map-wrap{
+  position:relative;
+  width:100%;
+  height:500px;
+  min-height:500px;
+  flex:none;
+  border-radius:14px;
+  box-shadow:0 2px 14px rgba(30,41,59,0.13);
+  background:#fff;
+}
+#kakaoMap{
+  width:100%;
+  height:500px;
+  min-height:500px;
+  border-radius:14px;
+  display:block;
+}
+#mapStatus{
+  position:absolute;top:10px;left:10px;z-index:120;
+  background:rgba(255,255,255,0.96);border:1px solid #d4ddf5;border-radius:10px;
+  padding:8px 12px;font-size:13px;font-weight:700;color:#2563EB;box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+.map-legend{
+  position:absolute;bottom:1.5vh;left:0.8vw;background:rgba(255,255,255,0.97);
+  border-radius:10px;padding:0.8vh 1vw;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.14);
+  font-size:clamp(11px,0.95vw,16px);display:flex;flex-direction:column;gap:0.3vh;
+}
+.leg-title{font-weight:800;color:#1A3A6B;font-size:clamp(12px,1vw,17px);margin-bottom:0.2vh;}
+.leg-row{display:flex;align-items:center;gap:0.5vw;color:#475569;}
+.leg-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+.map-ctrl{position:absolute;top:0.9vh;right:0.7vw;z-index:100;display:flex;flex-direction:column;gap:0.4vh;}
+.map-ctrl-btn{
+  background:#fff;border:2px solid #c7d2f0;border-radius:9px;padding:0.45vh 0.9vw;
+  font-size:clamp(11px,0.95vw,16px);font-weight:700;color:#475569;cursor:pointer;
+  box-shadow:0 1px 6px rgba(0,0,0,0.1);transition:all 0.18s;font-family:inherit;white-space:nowrap;
+}
+.map-ctrl-btn.on{background:#2563EB;border-color:#2563EB;color:#fff;}
+
+/* 차트 행 */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:0.9vw;height:22vh;flex-shrink:0;}
+.chart-wrap{position:relative;width:100%;overflow:hidden;}
+
+/* 민원 리스트 */
+.report-list{display:flex;flex-direction:column;gap:0.5vh;overflow:hidden;}
+.report-item{
+  background:#fff;border-radius:10px;padding:0.9vh 0.9vw;box-shadow:0 1px 7px rgba(30,41,59,0.07);
+  cursor:pointer;border-left:5px solid #2563EB;transition:box-shadow 0.18s;overflow:hidden;
+}
+.report-item:hover{box-shadow:0 3px 16px rgba(37,99,235,0.2);}
+.report-item.orange{border-left-color:#F59E0B;}.report-item.green{border-left-color:#10B981;}
+.report-item.red{border-left-color:#EF4444;}.report-item.purple{border-left-color:#8B5CF6;}
+.report-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.2vh;}
+.report-ttl{
+  font-size:clamp(12px,1.05vw,17px);font-weight:700;color:#1e293b;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%;
+}
+.badge{font-size:clamp(10px,0.85vw,14px);font-weight:700;padding:0.15vh 0.6vw;border-radius:12px;white-space:nowrap;}
+.b-blue{background:#dbeafe;color:#1d4ed8;}.b-yellow{background:#fef9c3;color:#92400e;}
+.b-green{background:#d1fae5;color:#065f46;}.b-red{background:#fee2e2;color:#991b1b;}
+.b-purple{background:#ede9fe;color:#5b21b6;}.b-cyan{background:#cffafe;color:#155e75;}
+.b-orange{background:#ffedd5;color:#9a3412;}
+.report-meta{font-size:clamp(10px,0.85vw,14px);color:#94a3b8;display:flex;gap:0.5vw;align-items:center;}
+.tl{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:3px;vertical-align:middle;}
+.tl-red{background:#EF4444;box-shadow:0 0 5px #EF4444bb;}
+.tl-yellow{background:#F59E0B;box-shadow:0 0 5px #F59E0Bbb;}
+.tl-green{background:#10B981;box-shadow:0 0 5px #10B981bb;}
+.tl-blue{background:#3B82F6;box-shadow:0 0 5px #3B82F6bb;}
+.tl-purple{background:#8B5CF6;box-shadow:0 0 5px #8B5CF6bb;}
+.tl-cyan{background:#06B6D4;boxShadow:0 0 5px #06B6D4bb;}
+.tl-orange{background:#F97316;box-shadow:0 0 5px #F97316bb;}
+
+/* 부서 테이블 */
+.mini-tbl{width:100%;border-collapse:collapse;font-size:clamp(11px,0.95vw,16px);}
+.mini-tbl th{background:#EFF3FB;color:#475569;font-weight:800;padding:0.4vh 0.4vw;text-align:center;border-bottom:1px solid #d4ddf5;}
+.mini-tbl td{padding:0.35vh 0.4vw;text-align:center;border-bottom:1px solid #f1f5f9;color:#334155;}
+.mini-tbl tr:last-child td{border-bottom:none;}
+.rate-bar-bg{width:100%;background:#e2e8f0;border-radius:5px;height:7px;overflow:hidden;}
+.rate-bar{height:100%;border-radius:5px;transition:width 1.2s ease;}
+
+/* 푸터 */
+.footer{
+  background:#1A3A6B;display:flex;align-items:center;justify-content:space-between;
+  padding:0 2%;height:8vh;overflow:hidden;
+}
+.f-stats{display:flex;gap:2vw;align-items:center;}
+.f-stat{text-align:center;color:rgba(255,255,255,0.9);}
+.f-num{font-size:clamp(15px,1.3vw,22px);font-weight:900;display:block;line-height:1.1;}
+.f-label{font-size:clamp(10px,0.82vw,14px);opacity:0.72;display:block;}
+.f-divider{width:1px;height:3.5vh;background:rgba(255,255,255,0.22);}
+.f-right{display:flex;align-items:center;gap:0.9vw;}
+.f-update{color:rgba(255,255,255,0.65);font-size:clamp(11px,0.9vw,15px);}
+.btn-action{
+  background:#2563EB;color:#fff;border:none;border-radius:9px;padding:0.65vh 1.4vw;
+  font-size:clamp(12px,1.05vw,17px);font-weight:700;cursor:pointer;transition:background 0.18s;font-family:inherit;
+}
+.btn-action:hover{background:#1d4ed8;}
+.btn-action.outline{background:transparent;border:2px solid rgba(255,255,255,0.5);color:rgba(255,255,255,0.92);}
+.btn-action.outline:hover{background:rgba(255,255,255,0.12);}
+
+/* AI 카드 */
+.ai-card{background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:14px;padding:1vh 1vw;flex-shrink:0;overflow:hidden;}
+.ai-card .card-title{color:#92400E;margin-bottom:0.5vh;}
+.ai-row{font-size:clamp(11px,0.95vw,16px);color:#78350F;line-height:2;}
+.ai-badge{
+  display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#6366F1,#8B5CF6);
+  color:#fff;border-radius:12px;padding:2px 9px;font-size:clamp(10px,0.85vw,14px);font-weight:700;
+}
+
+/* 카카오맵 오버레이 */
+.kov{
+  position:relative;background:#fff;border-radius:14px;padding:14px 18px;
+  box-shadow:0 6px 28px rgba(0,0,0,0.18);font-family:'Pretendard','Malgun Gothic',sans-serif;
+  font-size:14px;min-width:230px;border-top:5px solid #2563EB;
+}
+.kov.red-top{border-top-color:#EF4444;}.kov.yellow-top{border-top-color:#F59E0B;}
+.kov.green-top{border-top-color:#10B981;}.kov.purple-top{border-top-color:#8B5CF6;}
+.kov.cyan-top{border-top-color:#06B6D4;}.kov.orange-top{border-top-color:#F97316;}
+.kov-close{
+  position:absolute;top:9px;right:12px;cursor:pointer;color:#94a3b8;font-size:18px;
+  font-weight:700;background:none;border:none;line-height:1;
+}
+.kov-title{font-weight:800;font-size:15px;color:#1A3A6B;margin-bottom:9px;}
+.kov-row{display:flex;justify-content:space-between;margin-bottom:5px;color:#475569;font-size:13px;gap:12px;}
+.kov-row strong{color:#1e293b;text-align:right;}
+.kov-desc{margin-top:7px;font-size:12px;color:#64748b;line-height:1.6;}
+
+/* 챗봇 */
+#chatbot-btn{
+  position:fixed;bottom:2.5vh;right:1.5vw;width:62px;height:62px;border-radius:50%;
+  background:linear-gradient(135deg,#1A3A6B,#2563EB);color:#fff;font-size:20px;border:none;
+  cursor:pointer;box-shadow:0 5px 24px rgba(37,99,235,0.5);z-index:9999;transition:transform 0.2s;
+  display:flex;align-items:center;justify-content:center;
+}
+#chatbot-btn:hover{transform:scale(1.1);}
+.chat-badge{
+  position:absolute;top:-4px;right:-4px;background:#EF4444;color:#fff;border-radius:50%;
+  width:22px;height:22px;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff;
+}
+#chatbot-panel{
+  position:fixed;bottom:calc(2.5vh + 72px);right:1.5vw;width:360px;height:460px;background:#fff;
+  border-radius:18px;box-shadow:0 10px 48px rgba(30,41,59,0.26);z-index:9998;display:none;
+  flex-direction:column;overflow:hidden;border:1.5px solid #d4ddf5;
+}
+.chat-header{
+  background:linear-gradient(135deg,#1A3A6B,#2563EB);color:#fff;padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:15px;flex-shrink:0;
+}
+.chat-header-info{display:flex;align-items:center;gap:10px;}
+.chat-online{width:10px;height:10px;background:#10B981;border-radius:50%;box-shadow:0 0 7px #10B981;}
+.chat-close{background:transparent;border:none;color:rgba(255,255,255,0.85);font-size:20px;cursor:pointer;font-weight:700;}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#F4F7FF;}
+.chat-messages::-webkit-scrollbar{width:5px;}
+.chat-messages::-webkit-scrollbar-thumb{background:#c7d2f0;border-radius:5px;}
+.chat-msg{max-width:87%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.6;word-break:keep-all;}
+.chat-msg.bot{
+  background:#fff;color:#1e293b;border:1px solid #d4ddf5;border-radius:4px 14px 14px 14px;
+  align-self:flex-start;box-shadow:0 1px 5px rgba(30,41,59,0.07);
+}
+.chat-msg.user{
+  background:linear-gradient(135deg,#1A3A6B,#2563EB);color:#fff;border-radius:14px 14px 4px 14px;align-self:flex-end;
+}
+.chat-msg.typing{color:#94a3b8;font-style:italic;}
+.quick-btns{padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid #f1f5f9;flex-shrink:0;background:#fff;}
+.quick-btn{
+  font-size:12px;font-weight:700;padding:5px 10px;border-radius:14px;border:2px solid #2563EB;background:#fff;
+  color:#2563EB;cursor:pointer;transition:all 0.15s;font-family:inherit;white-space:nowrap;
+}
+.quick-btn:hover{background:#2563EB;color:#fff;}
+.chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #d4ddf5;flex-shrink:0;background:#fff;}
+.chat-input-row input{
+  flex:1;border:2px solid #d4ddf5;border-radius:10px;padding:8px 12px;font-size:14px;outline:none;font-family:inherit;transition:border-color 0.18s;
+}
+.chat-input-row input:focus{border-color:#2563EB;}
+.chat-input-row button{background:#2563EB;color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:16px;cursor:pointer;}
+
+/* 모달 */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.58);z-index:8000;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:#fff;border-radius:18px;padding:30px 36px;width:500px;max-width:95vw;
+  box-shadow:0 10px 52px rgba(30,41,59,0.3);font-family:inherit;position:relative;
+}
+.modal-title{font-size:22px;font-weight:800;color:#1A3A6B;margin-bottom:20px;}
+.modal-close{position:absolute;top:16px;right:18px;background:none;border:none;font-size:24px;color:#94a3b8;cursor:pointer;font-weight:700;}
+.form-row{margin-bottom:15px;}
+.form-label{display:block;font-size:14px;font-weight:700;color:#475569;margin-bottom:6px;}
+.form-input,.form-select,.form-textarea{
+  width:100%;border:2px solid #d4ddf5;border-radius:10px;padding:10px 14px;font-size:15px;
+  font-family:inherit;outline:none;transition:border-color 0.18s;color:#1e293b;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:#2563EB;}
+.form-textarea{resize:vertical;min-height:85px;}
+.form-btn-row{display:flex;gap:11px;justify-content:flex-end;margin-top:22px;}
+.form-btn{padding:11px 26px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;}
+.form-btn.primary{background:#2563EB;color:#fff;}
+.form-btn.cancel{background:#F1F5F9;color:#475569;}
+.form-success{text-align:center;padding:22px 0;font-size:17px;font-weight:700;color:#10B981;display:none;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="header">
+  <div class="h-left">
+    <div class="h-title">
+      <span class="main">화성특례시 클린맵 | 청렴 공개 행정 플랫폼</span>
+      <span class="sub">Hwaseong Clean Map — 민원·인허가 투명 공개 시스템 (AI 기반)</span>
+    </div>
+  </div>
+  <div class="h-nav">
+    <button class="nav-btn active" onclick="setView('all',this)">통합 보기</button>
+    <button class="nav-btn" onclick="setView('complaint',this)">민원 신고</button>
+    <button class="nav-btn" onclick="setView('permit',this)">인허가</button>
+  </div>
+  <div class="h-right">
+    <div class="datetime"><span id="dateStr"></span><strong id="timeStr"></strong></div>
+    <div class="user-badge">홍길동 | 도시과</div>
+  </div>
+</header>
+
+<div class="content">
+
+  <div class="panel panel-left">
+    <div class="card">
+      <div class="card-title">민원 현황</div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-num" id="k1">0</div><div class="kpi-label">총 접수</div><div class="kpi-diff">▲ 12 전일比</div></div>
+        <div class="kpi-card orange"><div class="kpi-num" id="k2">0</div><div class="kpi-label">처리 중</div><div class="kpi-diff down">▼ 3 감소</div></div>
+        <div class="kpi-card green"><div class="kpi-num" id="k3">0</div><div class="kpi-label">처리 완료</div><div class="kpi-diff">▲ 8 증가</div></div>
+        <div class="kpi-card red"><div class="kpi-num" id="k4">0</div><div class="kpi-label">긴급</div><div class="kpi-diff down">▲ 2 신규</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">인허가 현황</div>
+      <div class="kpi-grid">
+        <div class="kpi-card purple"><div class="kpi-num" id="k5">0</div><div class="kpi-label">신청 접수</div></div>
+        <div class="kpi-card orange"><div class="kpi-num" id="k6">0</div><div class="kpi-label">심의 중</div></div>
+        <div class="kpi-card cyan"><div class="kpi-num" id="k7">0</div><div class="kpi-label">허가 완료</div></div>
+        <div class="kpi-card red"><div class="kpi-num" id="k8">0</div><div class="kpi-label">보완 요청</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">민원 유형 필터</div>
+      <div class="filter-wrap">
+        <button class="filter-btn active" onclick="filterCat('전체',this)">전체</button>
+        <button class="filter-btn" onclick="filterCat('도로·교통',this)">도로·교통</button>
+        <button class="filter-btn" onclick="filterCat('환경·청소',this)">환경·청소</button>
+        <button class="filter-btn" onclick="filterCat('시설물',this)">시설물</button>
+        <button class="filter-btn" onclick="filterCat('안전',this)">안전</button>
+        <button class="filter-btn" onclick="filterCat('복지',this)">복지</button>
+      </div>
+    </div>
+
+    <div class="card" style="flex:1;overflow:hidden;">
+      <div class="card-title">민원 유형 분포</div>
+      <div class="chart-wrap" style="height:82%;"><canvas id="donutChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="panel-center">
+    <div class="map-wrap" id="mapWrap">
+      <div id="mapStatus">지도 초기화 대기 중...</div>
+      <div id="kakaoMap"></div>
+
+      <div class="map-legend">
+        <div class="leg-title">민원</div>
+        <div class="leg-row"><span class="leg-dot" style="background:#3B82F6"></span>접수</div>
+        <div class="leg-row"><span class="leg-dot" style="background:#F59E0B"></span>검토중</div>
+        <div class="leg-row"><span class="leg-dot" style="background:#10B981"></span>처리완료</div>
+        <div class="leg-row"><span class="leg-dot" style="background:#EF4444"></span>긴급</div>
+        <div style="border-top:1px solid #d4ddf5;margin:0.4vh 0;padding-top:0.4vh;">
+          <div class="leg-title">인허가</div>
+          <div class="leg-row"><span class="leg-dot" style="background:#8B5CF6"></span>심의중</div>
+          <div class="leg-row"><span class="leg-dot" style="background:#06B6D4"></span>허가완료</div>
+          <div class="leg-row"><span class="leg-dot" style="background:#F97316"></span>보완요청</div>
+        </div>
+      </div>
+
+      <div class="map-ctrl">
+        <button class="map-ctrl-btn on" id="btnCluster" onclick="toggleCluster()">클러스터</button>
+        <button class="map-ctrl-btn on" id="btnPermit" onclick="togglePermitLayer()">인허가</button>
+      </div>
+    </div>
+
+    <div class="chart-row">
+      <div class="card" style="overflow:hidden;height:100%;">
+        <div class="card-title">읍면동별 미처리 현황</div>
+        <div class="chart-wrap" style="height:78%;"><canvas id="barChart"></canvas></div>
+      </div>
+      <div class="card" style="overflow:hidden;height:100%;">
+        <div class="card-title">주간 처리 추이</div>
+        <div class="chart-wrap" style="height:78%;"><canvas id="lineChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel panel-right">
+    <div class="card">
+      <div class="card-title">최근 접수 민원 <span class="ai-badge">AI분석</span></div>
+      <div class="report-list" id="reportList"></div>
+    </div>
+
+    <div class="card" style="overflow:hidden;">
+      <div class="card-title">인허가 유형별 현황</div>
+      <div class="chart-wrap" style="height:13vh;"><canvas id="permitChart"></canvas></div>
+    </div>
+
+    <div class="card" style="flex:1;overflow:hidden;">
+      <div class="card-title">담당부서별 처리율</div>
+      <table class="mini-tbl">
+        <thead><tr><th>부서</th><th>접수</th><th>완료</th><th>처리율</th></tr></thead>
+        <tbody id="deptBody"></tbody>
+      </table>
+    </div>
+
+    <div class="ai-card">
+      <div class="card-title">AI 위험도 실시간 알림</div>
+      <div class="ai-row" id="aiAlertBox">AI 분석 중...</div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <div class="f-stats">
+    <div class="f-stat"><span class="f-num">1,247</span><span class="f-label">누적 민원</span></div>
+    <div class="f-divider"></div>
+    <div class="f-stat"><span class="f-num" style="color:#10B981;">89.3%</span><span class="f-label">이달 처리율</span></div>
+    <div class="f-divider"></div>
+    <div class="f-stat"><span class="f-num">2.8일</span><span class="f-label">평균 처리일</span></div>
+    <div class="f-divider"></div>
+    <div class="f-stat"><span class="f-num" style="color:#EF4444;">12일</span><span class="f-label">최장 미처리</span></div>
+    <div class="f-divider"></div>
+    <div class="f-stat"><span class="f-num" style="color:#06B6D4;">342</span><span class="f-label">인허가 완료</span></div>
+  </div>
+  <div class="f-right">
+    <div class="f-update" id="updateTime">--:--:--</div>
+    <button class="btn-action" onclick="openComplaintModal()">민원신고</button>
+    <button class="btn-action outline" onclick="openPermitModal()">인허가 신청</button>
+    <button class="btn-action outline" onclick="openChat()">클린봇</button>
+  </div>
+</footer>
+</div>
+
+<div class="modal-overlay" id="complaintModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('complaintModal')">✕</button>
+    <div class="modal-title">민원 신고 접수</div>
+    <div id="complaintForm">
+      <div class="form-row"><label class="form-label">민원 제목 *</label><input class="form-input" id="c_title" type="text" placeholder="민원 내용을 간략히 입력하세요"></div>
+      <div class="form-row"><label class="form-label">민원 유형 *</label>
+        <select class="form-select" id="c_cat">
+          <option value="">-- 선택 --</option>
+          <option>도로·교통</option><option>환경·청소</option>
+          <option>시설물</option><option>안전</option><option>복지</option><option>기타</option>
+        </select>
+      </div>
+      <div class="form-row"><label class="form-label">발생 위치 *</label><input class="form-input" id="c_addr" type="text" placeholder="예: 향남읍 발안로 112번지 앞"></div>
+      <div class="form-row"><label class="form-label">상세 내용</label><textarea class="form-textarea" id="c_content" placeholder="불편사항을 자세히 설명해주세요..."></textarea></div>
+      <div class="form-btn-row">
+        <button class="form-btn cancel" onclick="closeModal('complaintModal')">취소</button>
+        <button class="form-btn primary" onclick="submitComplaint()">AI 분석 후 접수</button>
+      </div>
+    </div>
+    <div class="form-success" id="complaintSuccess">민원이 접수되었습니다!<br><span id="complaintAiResult" style="font-size:15px;color:#475569;font-weight:400;"></span></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="permitModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('permitModal')">✕</button>
+    <div class="modal-title">인허가 신청</div>
+    <div id="permitForm">
+      <div class="form-row"><label class="form-label">신청 명칭 *</label><input class="form-input" id="p_title" type="text" placeholder="예: 향남읍 근린생활시설 신축"></div>
+      <div class="form-row"><label class="form-label">인허가 유형 *</label>
+        <select class="form-select" id="p_type">
+          <option value="">-- 선택 --</option>
+          <option>건축허가</option><option>영업허가</option>
+          <option>개발행위</option><option>공장설립</option><option>용도변경</option><option>기타</option>
+        </select>
+      </div>
+      <div class="form-row"><label class="form-label">신청 위치 *</label><input class="form-input" id="p_addr" type="text" placeholder="예: 향남읍 발안로 100"></div>
+      <div class="form-row"><label class="form-label">규모 / 면적</label><input class="form-input" id="p_area" type="text" placeholder="예: 연면적 850㎡"></div>
+      <div class="form-btn-row">
+        <button class="form-btn cancel" onclick="closeModal('permitModal')">취소</button>
+        <button class="form-btn primary" onclick="submitPermit()">신청 접수</button>
+      </div>
+    </div>
+    <div class="form-success" id="permitSuccess">인허가 신청이 접수되었습니다!<br><span style="font-size:15px;color:#475569;font-weight:400;">담당부서에서 검토 후 연락드립니다.</span></div>
+  </div>
+</div>
+
+<button id="chatbot-btn" onclick="toggleChat()">봇<span class="chat-badge" id="chatBadge">1</span></button>
+<div id="chatbot-panel">
+  <div class="chat-header">
+    <div class="chat-header-info"><span class="chat-online"></span>클린봇 — AI 안내 챗봇</div>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg bot">안녕하세요! 화성특례시 클린맵 AI 챗봇 <strong>클린봇</strong>입니다.<br>민원신고·인허가·처리현황 등 무엇이든 질문해 주세요!</div>
+  </div>
+  <div class="quick-btns">
+    <button class="quick-btn" onclick="quickAsk('신고 방법 알려줘')">신고방법</button>
+    <button class="quick-btn" onclick="quickAsk('인허가 조회')">인허가</button>
+    <button class="quick-btn" onclick="quickAsk('마커 색상 의미')">마커색상</button>
+    <button class="quick-btn" onclick="quickAsk('처리 기간')">처리기간</button>
+    <button class="quick-btn" onclick="quickAsk('AI 기능 설명')">AI기능</button>
+  </div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="질문을 입력하세요..." onkeypress="if(event.key==='Enter')sendChat()">
+    <button onclick="sendChat()">전송</button>
+  </div>
+</div>
+
+<!-- 카카오맵 SDK: 실행 코드보다 먼저 -->
+<script type="text/javascript"
+  src="//dapi.kakao.com/v2/maps/sdk.js?appkey=7de665f62f98afb43a5e9c084d3d3e21&libraries=clusterer">
+</script>
+
+<script>
+'use strict';
+
+/* AI 엔진 */
+var AI_CATS={
+  '도로·교통':['도로','포트홀','신호','주차','교통','보도','블록','아스팔트'],
+  '환경·청소':['쓰레기','청소','악취','소음','환경','오염','투기','하천'],
+  '시설물':['가로등','시설','파손','고장','벤치','공원','놀이터','수도'],
+  '안전':['위험','안전','사고','화재','범죄','붕괴','침수','부상'],
+  '복지':['복지','노인','장애','아동','지원','보조']
+};
+function aiClassify(t){
+  var s=(t||'').toLowerCase();
+  for(var c in AI_CATS){
+    var kw=AI_CATS[c];
+    for(var i=0;i<kw.length;i++){
+      if(s.indexOf(kw[i])!==-1) return c;
+    }
+  }
+  return '기타';
+}
+var HKW=['긴급','위험','사고','화재','범죄','붕괴','침수','부상'];
+var MKW=['파손','고장','악취','소음','투기','미점등','불법'];
+function aiRisk(t,st){
+  if(st==='긴급') return Math.floor(Math.random()*21)+75;
+  if(st==='처리완료') return Math.floor(Math.random()*20)+15;
+  var s=(t||'').toLowerCase();
+  for(var i=0;i<HKW.length;i++) if(s.indexOf(HKW[i])!==-1) return Math.floor(Math.random()*21)+75;
+  for(var j=0;j<MKW.length;j++) if(s.indexOf(MKW[j])!==-1) return Math.floor(Math.random()*26)+45;
+  return Math.floor(Math.random()*25)+20;
+}
+function riskColor(s){return s>=70?'#EF4444':s>=45?'#F59E0B':'#10B981';}
+function riskLabel(s){return s>=70?'긴급처리 권고':s>=45?'3일 내 처리':'일반처리';}
+
+/* 더미 데이터 */
+var RAW=[
+  {id:'MIN-2026-0892',title:'향남읍 포트홀 도로 파손',cat:'도로·교통',status:'긴급',lat:37.1580,lng:126.8100,dept:'도로과',time:'5분 전',addr:'향남읍 발안로 112번지 앞',content:'차도 중앙 지름 40cm 포트홀 발생. 야간 사고 위험.'},
+  {id:'MIN-2026-0891',title:'동탄9동 가로등 연속 고장',cat:'시설물',status:'검토중',lat:37.2100,lng:127.0700,dept:'시설과',time:'18분 전',addr:'동탄9동 동탄대로 501 보행로',content:'보행로 가로등 3개 연속 미점등. 야간 보행 안전 우려.'},
+  {id:'MIN-2026-0890',title:'봉담읍 쓰레기 무단 투기',cat:'환경·청소',status:'처리완료',lat:37.2300,lng:126.9900,dept:'환경과',time:'34분 전',addr:'봉담읍 봉담로 골목 3길',content:'골목 안 생활쓰레기 무단 투기. 악취 민원.'},
+  {id:'MIN-2026-0889',title:'남양읍 불법 주정차 반복',cat:'도로·교통',status:'접수',lat:37.2050,lng:126.7150,dept:'교통과',time:'52분 전',addr:'남양읍 남양리 시장 앞 도로',content:'소방차 전용구역 불법 주차 반복 발생.'},
+  {id:'MIN-2026-0888',title:'장안면 공원 벤치 파손',cat:'시설물',status:'검토중',lat:37.1300,lng:126.9050,dept:'공원과',time:'1시간 전',addr:'장안면 장안공원 내',content:'공원 벤치 목재 파손으로 부상 우려.'},
+  {id:'MIN-2026-0887',title:'동탄4동 보도블록 파손',cat:'도로·교통',status:'접수',lat:37.2250,lng:127.0550,dept:'도로과',time:'1시간 20분 전',addr:'동탄4동 동탄순환대로 200',content:'보도블록 들뜸으로 낙상 위험.'},
+  {id:'MIN-2026-0886',title:'향남읍 축산 악취 민원',cat:'환경·청소',status:'검토중',lat:37.1620,lng:126.8050,dept:'환경과',time:'2시간 전',addr:'향남읍 구문천리 일대',content:'인근 축사 악취 주거지역 확산.'},
+  {id:'MIN-2026-0885',title:'진안동 가로등 미점등',cat:'시설물',status:'처리완료',lat:37.1900,lng:126.9750,dept:'시설과',time:'3시간 전',addr:'진안동 진안로 55',content:'가로등 전구 수명 만료. 교체 완료.'},
+  {id:'MIN-2026-0884',title:'팔탄면 하천 불법 투기',cat:'환경·청소',status:'긴급',lat:37.1450,lng:126.8650,dept:'환경과',time:'3시간 30분 전',addr:'팔탄면 구장리 발안천 인근',content:'하천변 건설폐기물 불법 투기. 수질 오염 우려.'},
+  {id:'MIN-2026-0883',title:'동탄1동 놀이터 안전 위협',cat:'안전',status:'검토중',lat:37.1980,lng:127.0620,dept:'공원과',time:'4시간 전',addr:'동탄1동 동탄어린이공원',content:'미끄럼틀 금속 볼트 돌출. 어린이 부상 위험.'}
+];
+
+var COMPLAINTS=RAW.map(function(c){
+  return Object.assign({},c,{
+    aiCat:aiClassify(c.title+' '+c.content),
+    aiRisk:aiRisk(c.title+' '+c.content,c.status)
+  });
+});
+
+var PERMITS=[
+  {id:'PRM-2026-0341',title:'향남읍 근린생활시설 신축',type:'건축허가',status:'허가완료',lat:37.1640,lng:126.8220,dept:'건축과',area:'연면적 850㎡',period:'2026.03.10~2026.09.30'},
+  {id:'PRM-2026-0340',title:'동탄7동 공동주택 건설',type:'건축허가',status:'심의중',lat:37.2200,lng:127.0500,dept:'건축과',area:'연면적 12,400㎡',period:'2026.04.01~2027.12.31'},
+  {id:'PRM-2026-0339',title:'봉담읍 일반음식점 영업',type:'영업허가',status:'허가완료',lat:37.2280,lng:126.9850,dept:'위생과',area:'영업면적 165㎡',period:'2026.05.15~'},
+  {id:'PRM-2026-0338',title:'남양읍 토지 형질변경',type:'개발행위',status:'보완요청',lat:37.2000,lng:126.7100,dept:'도시과',area:'대지면적 2,200㎡',period:'서류 보완 중'},
+  {id:'PRM-2026-0337',title:'진안동 소규모 공장 설립',type:'공장설립',status:'심의중',lat:37.1880,lng:126.9760,dept:'경제과',area:'건축면적 1,100㎡',period:'심의 진행 중'},
+  {id:'PRM-2026-0336',title:'동탄9동 판매시설 용도변경',type:'용도변경',status:'접수',lat:37.2150,lng:127.0820,dept:'건축과',area:'연면적 420㎡',period:'2026.06.10 접수'},
+  {id:'PRM-2026-0335',title:'팔탄면 창고시설 건축',type:'건축허가',status:'허가완료',lat:37.1500,lng:126.8700,dept:'건축과',area:'연면적 600㎡',period:'2026.02.01~2026.08.31'},
+  {id:'PRM-2026-0334',title:'우정읍 축산업 허가',type:'영업허가',status:'보완요청',lat:37.1200,lng:126.8400,dept:'농업과',area:'사육면적 3,500㎡',period:'서류 보완 중'},
+  {id:'PRM-2026-0333',title:'병점1동 노래연습장 영업',type:'영업허가',status:'허가완료',lat:37.1950,lng:127.0480,dept:'위생과',area:'영업면적 210㎡',period:'2026.05.20~'},
+  {id:'PRM-2026-0332',title:'마도면 태양광 발전시설',type:'개발행위',status:'심의중',lat:37.1100,lng:126.7600,dept:'환경과',area:'설치면적 8,000㎡',period:'환경영향평가 진행 중'}
+];
+
+var DEPT=[
+  {name:'도로과',recv:38,done:31},
+  {name:'환경과',recv:34,done:29},
+  {name:'시설과',recv:26,done:20},
+  {name:'건축과',recv:22,done:19},
+  {name:'교통과',recv:17,done:14}
+];
+
+var SC={
+  '접수':{color:'#3B82F6',badge:'b-blue',tl:'tl-blue',border:''},
+  '검토중':{color:'#F59E0B',badge:'b-yellow',tl:'tl-yellow',border:'orange'},
+  '처리완료':{color:'#10B981',badge:'b-green',tl:'tl-green',border:'green'},
+  '긴급':{color:'#EF4444',badge:'b-red',tl:'tl-red',border:'red'},
+  '허가완료':{color:'#06B6D4',badge:'b-cyan',tl:'tl-cyan',border:''},
+  '심의중':{color:'#8B5CF6',badge:'b-purple',tl:'tl-purple',border:'purple'},
+  '보완요청':{color:'#F97316',badge:'b-orange',tl:'tl-orange',border:'orange'}
+};
+
+function topCls(s){
+  return {
+    '긴급':'red-top',
+    '처리완료':'green-top',
+    '검토중':'yellow-top',
+    '허가완료':'cyan-top',
+    '심의중':'purple-top',
+    '보완요청':'orange-top'
+  }[s] || '';
+}
+
+/* 시계 */
+function updateClock(){
+  var n=new Date(),days=['일','월','화','수','목','금','토'];
+  document.getElementById('dateStr').textContent=
+    n.getFullYear()+'.'+String(n.getMonth()+1).padStart(2,'0')+'.'+
+    String(n.getDate()).padStart(2,'0')+' ('+days[n.getDay()]+')';
+  var t=String(n.getHours()).padStart(2,'0')+':'+
+        String(n.getMinutes()).padStart(2,'0')+':'+
+        String(n.getSeconds()).padStart(2,'0');
+  document.getElementById('timeStr').textContent=t;
+  document.getElementById('updateTime').textContent=t;
+}
+setInterval(updateClock,1000);
+updateClock();
+
+function countUp(id,target){
+  var el=document.getElementById(id);
+  if(!el) return;
+  var step=target/80,cur=0;
+  var ti=setInterval(function(){
+    cur=Math.min(cur+step,target);
+    el.textContent=Math.floor(cur);
+    if(cur>=target) clearInterval(ti);
+  },16);
+}
+
+/* 지도 관련 */
+var kakaoMap=null, clusterer=null;
+var cMarkers=[], pMarkers=[], currentOverlay=null;
+var clusterOn=true, permitLayerOn=true;
+var currentView='all', currentCat='전체';
+
+function setMapStatus(text,color){
+  var el=document.getElementById('mapStatus');
+  if(!el) return;
+  el.textContent=text;
+  if(color) el.style.color=color;
+}
+
+function closeOverlay(){
+  if(currentOverlay){
+    currentOverlay.setMap(null);
+    currentOverlay=null;
+  }
+}
+
+function makeImg(color){
+  var svg=encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28">'+
+    '<circle cx="14" cy="14" r="12" fill="'+color+'" stroke="#fff" stroke-width="2.5"/>'+
+    '</svg>'
+  );
+  return new kakao.maps.MarkerImage(
+    'data:image/svg+xml,'+svg,
+    new kakao.maps.Size(28,28),
+    {offset:new kakao.maps.Point(14,14)}
+  );
+}
+
+function buildCMarkers(){
+  var ms=[];
+  COMPLAINTS.forEach(function(c){
+    var pos=new kakao.maps.LatLng(c.lat,c.lng);
+    var marker=new kakao.maps.Marker({
+      position:pos,
+      image:makeImg(SC[c.status]?SC[c.status].color:'#64748b'),
+      title:c.title
+    });
+
+    var html=
+      '<div class="kov '+topCls(c.status)+'">'+
+      '<button class="kov-close" onclick="closeOverlay()">✕</button>'+
+      '<div class="kov-title">'+c.id+'</div>'+
+      '<div class="kov-row"><span>제목</span><strong>'+c.title+'</strong></div>'+
+      '<div class="kov-row"><span>위치</span><strong>'+c.addr+'</strong></div>'+
+      '<div class="kov-row"><span>유형</span><strong>'+c.cat+'</strong></div>'+
+      '<div class="kov-row"><span>상태</span><strong><span class="tl '+(SC[c.status]?SC[c.status].tl:'')+'"></span>'+c.status+'</strong></div>'+
+      '<div class="kov-row"><span>담당부서</span><strong>'+c.dept+'</strong></div>'+
+      '<div class="kov-row"><span>AI분류</span><strong style="color:#6366F1;">'+c.aiCat+'</strong></div>'+
+      '<div class="kov-row"><span>위험도</span><strong style="color:'+riskColor(c.aiRisk)+'">'+c.aiRisk+'점 ('+riskLabel(c.aiRisk)+')</strong></div>'+
+      '<div class="kov-desc">'+c.content+'</div>'+
+      '</div>';
+
+    var ov=new kakao.maps.CustomOverlay({
+      content:html,
+      position:pos,
+      yAnchor:1.5,
+      zIndex:10
+    });
+
+    kakao.maps.event.addListener(marker,'click',(function(o){
+      return function(){
+        closeOverlay();
+        o.setMap(kakaoMap);
+        currentOverlay=o;
+      };
+    })(ov));
+
+    cMarkers.push({marker:marker,data:c,overlay:ov});
+    ms.push(marker);
+  });
+
+  if(clusterer){
+    clusterer.addMarkers(ms);
+  }
+}
+
+function buildPMarkers(){
+  PERMITS.forEach(function(p){
+    var pos=new kakao.maps.LatLng(p.lat,p.lng);
+    var marker=new kakao.maps.Marker({
+      position:pos,
+      image:makeImg(SC[p.status]?SC[p.status].color:'#8B5CF6'),
+      title:p.title,
+      map:kakaoMap
+    });
+
+    var html=
+      '<div class="kov '+topCls(p.status)+'">'+
+      '<button class="kov-close" onclick="closeOverlay()">✕</button>'+
+      '<div class="kov-title">'+p.id+'</div>'+
+      '<div class="kov-row"><span>명칭</span><strong>'+p.title+'</strong></div>'+
+      '<div class="kov-row"><span>유형</span><strong>'+p.type+'</strong></div>'+
+      '<div class="kov-row"><span>상태</span><strong><span class="tl '+(SC[p.status]?SC[p.status].tl:'')+'"></span>'+p.status+'</strong></div>'+
+      '<div class="kov-row"><span>담당부서</span><strong>'+p.dept+'</strong></div>'+
+      '<div class="kov-row"><span>규모</span><strong>'+p.area+'</strong></div>'+
+      '<div class="kov-row"><span>기간</span><strong>'+p.period+'</strong></div>'+
+      '</div>';
+
+    var ov=new kakao.maps.CustomOverlay({
+      content:html,
+      position:pos,
+      yAnchor:1.5,
+      zIndex:10
+    });
+
+    kakao.maps.event.addListener(marker,'click',(function(o){
+      return function(){
+        closeOverlay();
+        o.setMap(kakaoMap);
+        currentOverlay=o;
+      };
+    })(ov));
+
+    pMarkers.push({marker:marker,data:p,overlay:ov});
+  });
+}
+
+function applyFilter(){
+  closeOverlay();
+  if(!kakaoMap) return;
+
+  if(clusterer){
+    clusterer.clear();
+  }
+
+  var complaintMarkers=[];
+  cMarkers.forEach(function(obj){
+    var show=(currentView==='all'||currentView==='complaint');
+    if(currentCat!=='전체' && obj.data.cat!==currentCat) show=false;
+
+    if(clusterOn){
+      if(show) complaintMarkers.push(obj.marker);
+      obj.marker.setMap(null);
+    }else{
+      obj.marker.setMap(show ? kakaoMap : null);
+    }
+  });
+
+  if(clusterer){
+    clusterer.setMap(clusterOn ? kakaoMap : null);
+    if(clusterOn && complaintMarkers.length){
+      clusterer.addMarkers(complaintMarkers);
+    }
+  }
+
+  pMarkers.forEach(function(obj){
+    var visible=(currentView==='all'||currentView==='permit') && permitLayerOn;
+    obj.marker.setMap(visible ? kakaoMap : null);
+  });
+}
+
+function setView(view,btn){
+  currentView=view;
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  applyFilter();
+}
+
+function filterCat(cat,btn){
+  currentCat=cat;
+  document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  applyFilter();
+}
+
+function toggleCluster(){
+  clusterOn=!clusterOn;
+  document.getElementById('btnCluster').classList.toggle('on',clusterOn);
+  applyFilter();
+}
+
+function togglePermitLayer(){
+  permitLayerOn=!permitLayerOn;
+  document.getElementById('btnPermit').classList.toggle('on',permitLayerOn);
+  applyFilter();
+}
+
+function highlightMarker(id){
+  closeOverlay();
+  cMarkers.forEach(function(obj){
+    if(obj.data.id===id && kakaoMap){
+      kakaoMap.setCenter(new kakao.maps.LatLng(obj.data.lat,obj.data.lng));
+      kakaoMap.setLevel(5);
+      obj.overlay.setMap(kakaoMap);
+      currentOverlay=obj.overlay;
+    }
+  });
+}
+
+/* 리스트·테이블·AI */
+function renderReportList(){
+  var html='';
+  COMPLAINTS.slice(0,5).forEach(function(c){
+    var s=SC[c.status]||{};
+    html+=
+      '<div class="report-item '+(s.border||'')+'" onclick="highlightMarker(\''+c.id+'\')">'+
+      '<div class="report-top">'+
+      '<div class="report-ttl"><span class="tl '+(s.tl||'')+'"></span>'+c.title+'</div>'+
+      '<span class="badge '+(s.badge||'b-blue')+'">'+c.status+'</span>'+
+      '</div>'+
+      '<div class="report-meta">'+
+      '<span>'+c.cat+'</span>'+
+      '<span><span style="color:'+riskColor(c.aiRisk)+';font-weight:700;">'+c.aiRisk+'점</span></span>'+
+      '<span>'+c.time+'</span>'+
+      '</div></div>';
+  });
+  document.getElementById('reportList').innerHTML=html;
+}
+
+function renderDeptTable(){
+  var html='';
+  DEPT.forEach(function(d){
+    var rate=Math.round(d.done/d.recv*100);
+    var color=rate>=80?'#10B981':rate>=60?'#F59E0B':'#EF4444';
+    html+=
+      '<tr><td style="text-align:left;font-weight:700;">'+d.name+'</td>'+
+      '<td>'+d.recv+'</td><td>'+d.done+'</td>'+
+      '<td><div class="rate-bar-bg"><div class="rate-bar" style="width:'+rate+'%;background:'+color+';"></div></div>'+
+      '<div style="font-size:clamp(10px,0.85vw,14px);color:#475569;text-align:center;margin-top:2px;">'+rate+'%</div></td></tr>';
+  });
+  document.getElementById('deptBody').innerHTML=html;
+}
+
+function renderAiAlert(){
+  var sorted=COMPLAINTS.slice().sort(function(a,b){return b.aiRisk-a.aiRisk;});
+  var html=sorted.slice(0,3).map(function(c){
+    var label=c.aiRisk>=70?'고위험':c.aiRisk>=45?'주의':'일반';
+    return '<strong>'+c.title.slice(0,12)+(c.title.length>12?'…':'')+'</strong> — 위험도 <strong style="color:'+riskColor(c.aiRisk)+'">'+c.aiRisk+'점</strong> ('+label+')';
+  }).join('<br>');
+  document.getElementById('aiAlertBox').innerHTML=html;
+}
+
+/* 차트 */
+function initCharts(){
+  if(typeof Chart==='undefined') return;
+  var CF={family:'Pretendard',size:12};
+
+  new Chart(document.getElementById('donutChart'),{
+    type:'doughnut',
+    data:{
+      labels:['도로·교통','환경·청소','시설물','안전','복지','기타'],
+      datasets:[{
+        data:[38,24,18,10,7,3],
+        backgroundColor:['#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6','#94a3b8'],
+        borderWidth:2,borderColor:'#fff'
+      }]
+    },
+    options:{
+      cutout:'62%',
+      maintainAspectRatio:false,
+      animation:{duration:1200},
+      plugins:{legend:{position:'right',labels:{font:CF,boxWidth:12,padding:7}}}
+    }
+  });
+
+  new Chart(document.getElementById('barChart'),{
+    type:'bar',
+    data:{
+      labels:['향남읍','팔탄면','동탄1동','장안면','남양읍'],
+      datasets:[{
+        label:'미처리',
+        data:[18,14,12,9,7],
+        backgroundColor:['#EF4444','#EF4444','#F59E0B','#F59E0B','#3B82F6'],
+        borderRadius:5
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      maintainAspectRatio:false,
+      animation:{duration:1000},
+      scales:{
+        x:{ticks:{font:CF},grid:{color:'#f1f5f9'}},
+        y:{ticks:{font:CF},grid:{display:false}}
+      },
+      plugins:{legend:{display:false}}
+    }
+  });
+
+  new Chart(document.getElementById('lineChart'),{
+    type:'line',
+    data:{
+      labels:['월','화','수','목','금','토','일'],
+      datasets:[
+        {label:'접수',data:[18,24,19,28,22,15,12],borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,0.08)',tension:0.4,fill:true,pointRadius:4},
+        {label:'완료',data:[15,20,17,24,20,14,11],borderColor:'#10B981',backgroundColor:'rgba(16,185,129,0.06)',tension:0.4,fill:true,pointRadius:4}
+      ]
+    },
+    options:{
+      maintainAspectRatio:false,
+      animation:{duration:1000},
+      scales:{
+        x:{ticks:{font:CF},grid:{display:false}},
+        y:{ticks:{font:CF},grid:{color:'#f1f5f9'}}
+      },
+      plugins:{legend:{position:'top',labels:{font:CF,boxWidth:12,padding:6}}}
+    }
+  });
+
+  new Chart(document.getElementById('permitChart'),{
+    type:'bar',
+    data:{
+      labels:['건축허가','영업허가','개발행위','공장설립','용도변경'],
+      datasets:[
+        {label:'접수',data:[22,15,9,6,4],backgroundColor:'#8B5CF6',borderRadius:4},
+        {label:'완료',data:[18,13,7,4,3],backgroundColor:'#06B6D4',borderRadius:4}
+      ]
+    },
+    options:{
+      maintainAspectRatio:false,
+      animation:{duration:1000},
+      scales:{
+        x:{ticks:{font:CF},grid:{display:false}},
+        y:{ticks:{font:CF},grid:{color:'#f1f5f9'}}
+      },
+      plugins:{legend:{position:'top',labels:{font:CF,boxWidth:12,padding:6}}}
+    }
+  });
+}
+
+/* 모달 */
+function openComplaintModal(){
+  document.getElementById('complaintModal').classList.add('open');
+  document.getElementById('complaintForm').style.display='block';
+  document.getElementById('complaintSuccess').style.display='none';
+}
+function openPermitModal(){
+  document.getElementById('permitModal').classList.add('open');
+  document.getElementById('permitForm').style.display='block';
+  document.getElementById('permitSuccess').style.display='none';
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+}
+document.addEventListener('click',function(e){
+  if(e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
+});
+
+function submitComplaint(){
+  var title=document.getElementById('c_title').value.trim();
+  var cat=document.getElementById('c_cat').value;
+  var addr=document.getElementById('c_addr').value.trim();
+  if(!title||!cat||!addr){alert('제목, 유형, 위치는 필수입니다.');return;}
+
+  var content=document.getElementById('c_content').value;
+  var aiC=aiClassify(title+' '+content);
+  var aiR=aiRisk(title+' '+content,'접수');
+
+  document.getElementById('complaintForm').style.display='none';
+  document.getElementById('complaintAiResult').innerHTML='AI분석: <strong>'+aiC+'</strong> | 위험도 <strong style="color:'+riskColor(aiR)+'">'+aiR+'점</strong> ('+riskLabel(aiR)+')';
+  document.getElementById('complaintSuccess').style.display='block';
+  setTimeout(function(){closeModal('complaintModal');},3000);
+}
+
+function submitPermit(){
+  var title=document.getElementById('p_title').value.trim();
+  var type=document.getElementById('p_type').value;
+  var addr=document.getElementById('p_addr').value.trim();
+  if(!title||!type||!addr){alert('명칭, 유형, 위치는 필수입니다.');return;}
+
+  document.getElementById('permitForm').style.display='none';
+  document.getElementById('permitSuccess').style.display='block';
+  setTimeout(function(){closeModal('permitModal');},3000);
+}
+
+/* 클린봇 */
+var CHAT_RULES=[
+  {
+    kw:['신고','접수','방법'],
+    ans:`민원 신고:
+① 하단 [민원신고] 버튼 클릭
+② 제목·유형·위치 입력
+③ AI가 자동 분류·위험도 산출
+④ 지도에 마커로 실시간 표시`
+  },
+  {
+    kw:['인허가','허가','조회'],
+    ans:`인허가 확인:
+① 상단 [인허가] 버튼으로 지도 필터
+② 마커 클릭 → 담당부서·기간·규모 확인
+심의중 / 허가완료 / 보완요청`
+  },
+  {
+    kw:['마커','색상','범례'],
+    ans:`마커 색상:
+파랑=접수
+노랑=검토중
+초록=처리완료
+빨강=긴급
+보라=인허가 심의중
+하늘=허가완료
+주황=보완요청`
+  },
+  {
+    kw:['처리','기간','언제'],
+    ans:`처리 기간:
+• 일반 민원: 7일 이내
+• 긴급 민원: 48시간 이내
+• 건축허가: 14~30일
+• 영업허가: 7~14일`
+  },
+  {
+    kw:['ai','인공지능','위험도'],
+    ans:`AI 기능:
+① 민원 자동 카테고리 분류
+② 위험도 점수 산출(0~100점)
+70↑ 긴급 / 45~69 주의 / 44↓ 일반`
+  },
+  {
+    kw:['담당','부서','연락'],
+    ans:`담당부서:
+• 도로·교통 → 도로과
+• 환경·청소 → 환경과
+• 시설물 → 시설과
+전화: 031-5189-2000`
+  },
+  {
+    kw:['안녕','반가'],
+    ans:`안녕하세요! 클린봇입니다.
+무엇이든 질문해 주세요!`
+  }
+];
+
+function getBotAnswer(msg){
+  var m=(msg||'').toLowerCase();
+  for(var i=0;i<CHAT_RULES.length;i++){
+    var r=CHAT_RULES[i];
+    for(var j=0;j<r.kw.length;j++){
+      if(m.indexOf(r.kw[j])!==-1) return r.ans;
+    }
+  }
+  return `죄송합니다. 정확한 답변을 드리기 어렵습니다.
+전화: 031-5189-2000 으로 문의해 주세요.`;
+}
+
+var chatOpen=false;
+function toggleChat(){
+  chatOpen=!chatOpen;
+  var p=document.getElementById('chatbot-panel');
+  p.style.display=chatOpen?'flex':'none';
+  if(chatOpen){
+    document.getElementById('chatBadge').style.display='none';
+    document.getElementById('chatInput').focus();
+  }
+}
+function openChat(){if(!chatOpen)toggleChat();}
+function addChatMsg(text,role){
+  var box=document.getElementById('chatMessages');
+  var div=document.createElement('div');
+  div.className='chat-msg '+role;
+  div.style.whiteSpace='pre-line';
+  div.textContent=text;
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+  return div;
+}
+function sendChat(){
+  var input=document.getElementById('chatInput');
+  var msg=input.value.trim();
+  if(!msg) return;
+  addChatMsg(msg,'user');
+  input.value='';
+  var typing=addChatMsg('답변 작성 중...','bot typing');
+  setTimeout(function(){
+    typing.textContent=getBotAnswer(msg);
+    typing.className='chat-msg bot';
+  },600);
+}
+function quickAsk(msg){
+  document.getElementById('chatInput').value=msg;
+  sendChat();
+}
+
+/* 전역으로 노출: 오버레이 닫기 버튼용 */
+window.closeOverlay=closeOverlay;
+
+/* 초기화 */
+window.onload=function(){
+  try{
+    setMapStatus('기본 UI 초기화 중...', '#2563EB');
+
+    renderReportList();
+    renderDeptTable();
+    renderAiAlert();
+    initCharts();
+
+    countUp('k1',127); countUp('k2',43); countUp('k3',79); countUp('k4',5);
+    countUp('k5',58); countUp('k6',12); countUp('k7',34); countUp('k8',7);
+
+    var mapEl=document.getElementById('kakaoMap');
+    if(!mapEl){
+      setMapStatus('오류: 지도 영역을 찾을 수 없습니다.', '#EF4444');
+      return;
+    }
+
+    setMapStatus('지도 영역 확인: '+mapEl.offsetWidth+' x '+mapEl.offsetHeight, '#2563EB');
+
+    if(typeof kakao==='undefined' || !kakao.maps){
+      setMapStatus('오류: 카카오맵 SDK를 찾을 수 없습니다.', '#EF4444');
+      return;
+    }
+
+    kakaoMap=new kakao.maps.Map(mapEl,{
+      center:new kakao.maps.LatLng(37.1995,126.8314),
+      level:9
+    });
+
+    kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+    kakaoMap.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
+
+    clusterer=new kakao.maps.MarkerClusterer({
+      map:kakaoMap,
+      averageCenter:true,
+      minLevel:6,
+      styles:[{
+        width:'50px',
+        height:'50px',
+        background:'rgba(37,99,235,0.88)',
+        borderRadius:'50%',
+        color:'#fff',
+        textAlign:'center',
+        fontWeight:'800',
+        lineHeight:'50px',
+        fontSize:'16px',
+        border:'2px solid #fff',
+        boxShadow:'0 2px 10px rgba(37,99,235,0.45)'
+      }]
+    });
+
+    buildCMarkers();
+    buildPMarkers();
+    applyFilter();
+
+    setTimeout(function(){
+      kakaoMap.relayout();
+      kakaoMap.setCenter(new kakao.maps.LatLng(37.1995,126.8314));
+      setMapStatus('지도 정상 로드 완료', '#10B981');
+    },100);
+
+    window.addEventListener('resize', function(){
+      if(kakaoMap){
+        kakaoMap.relayout();
+      }
+    });
+
+  }catch(e){
+    console.error(e);
+    setMapStatus('오류: '+e.message, '#EF4444');
+  }
+};
+</script>
+</body>
+</html>
