@@ -419,7 +419,7 @@ html,body{
     <div class="f-update" id="updateTime">--:--:--</div>
     <button class="btn-action" onclick="openComplaintModal()">민원신고</button>
     <button class="btn-action outline" onclick="openPermitModal()">인허가 신청</button>
-    <button class="btn-action outline" onclick="openChat()">클린봇</button>
+    <button class="btn-action outline" onclick="openChat()">AI봇</button>
   </div>
 </footer>
 </div>
@@ -472,14 +472,14 @@ html,body{
   </div>
 </div>
 
-<button id="chatbot-btn" onclick="toggleChat()">봇<span class="chat-badge" id="chatBadge">1</span></button>
+<button id="chatbot-btn" onclick="toggleChat()">AI봇<span class="chat-badge" id="chatBadge">1</span></button>
 <div id="chatbot-panel">
   <div class="chat-header">
-    <div class="chat-header-info"><span class="chat-online"></span>클린봇 — AI 안내 챗봇</div>
+    <div class="chat-header-info"><span class="chat-online"></span>AI봇 — AI 안내 챗봇</div>
     <button class="chat-close" onclick="toggleChat()">✕</button>
   </div>
   <div class="chat-messages" id="chatMessages">
-    <div class="chat-msg bot">안녕하세요! 화성특례시 행정투명뷰 AI 챗봇 <strong>클린봇</strong>입니다.<br>민원신고·인허가·처리현황 등 무엇이든 질문해 주세요!</div>
+    <div class="chat-msg bot">안녕하세요! 화성특례시 행정투명뷰 AI 챗봇 <strong>AI봇</strong>입니다.<br>민원신고·인허가·처리현황 등 무엇이든 질문해 주세요!</div>
   </div>
   <div class="quick-btns">
     <button class="quick-btn" onclick="quickAsk('신고 방법 알려줘')">신고방법</button>
@@ -991,7 +991,7 @@ function submitPermit(){
   setTimeout(function(){closeModal('permitModal');},3000);
 }
 
-/* 클린봇 */
+/* AI봇 */
 var CHAT_RULES=[
   {
     kw:['신고','접수','방법'],
@@ -1044,7 +1044,7 @@ var CHAT_RULES=[
   },
   {
     kw:['안녕','반가'],
-    ans:`안녕하세요! 클린봇입니다.
+    ans:`안녕하세요! AI봇입니다.
 무엇이든 질문해 주세요!`
   }
 ];
